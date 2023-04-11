@@ -6,61 +6,42 @@ namespace Server
 {
     public partial class ServerForm : Form
     {
-        private IPAddress iPAddress;
-        private EndPoint endPoint;
-        private Socket socket;
+
         private Socket client;
         private int PORT_NUM = 50000;
         private byte[] data;
         private int bytesReceived;
+        private Server server;
 
         public ServerForm()
         {
             InitializeComponent();
+            server = new Server(IPAddress.Any, PORT_NUM);
+            server.DataReceived += onDataReceived;
+            server.Error += OnError;
+        }
+
+        private void OnError(object? sender, string message)
+        {
+            MessageBox.Show(message);
+        }
+
+        private void onDataReceived(object? sender, string message)
+        {
+            Invoke((MethodInvoker)delegate
+            {
+                txtDataFromClient.Text += "Client: " + message + Environment.NewLine;
+            });
         }
 
         private void ServerForm_Load(object sender, EventArgs e)
         {
-
-            endPoint = new IPEndPoint(IPAddress.Any, PORT_NUM);
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket.Bind(endPoint);
-            socket.Listen(10);
-            client = socket.Accept();
-
-            Thread receiveThread = new Thread(new ThreadStart(ReceiveData));
-            receiveThread.Start();
-
-        }
-        private void ReceiveData()
-        {
-            while (true)
-            {
-                try
-                {
-                    // Receive data from client
-                    data = new byte[1024];
-                    bytesReceived = client.Receive(data);
-                    string message = Encoding.ASCII.GetString(data, 0, bytesReceived);
-
-                    // Update UI with received message
-                    Invoke((MethodInvoker)delegate
-                    {
-                        txtDataFromClient.AppendText("Client: " + message + Environment.NewLine);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                    break;
-                }
-            }
+            server.start();
         }
 
         private void btnSendtoClient_Click(object sender, EventArgs e)
         {
-            byte[] data = Encoding.ASCII.GetBytes(txtDataToClient.Text);
-            client.Send(data);
+            server.SendData(txtDataToClient.Text);
         }
     }
 }

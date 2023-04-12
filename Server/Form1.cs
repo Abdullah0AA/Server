@@ -42,7 +42,7 @@ namespace Server
 
         private void btnSendtoClient_Click(object sender, EventArgs e)
         {
-            server.SendData(txtDataToClient.Text);
+            //server.SendData(txtDataToClient.Text);
         }
     }
 }

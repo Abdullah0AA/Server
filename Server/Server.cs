@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -17,7 +18,7 @@ namespace Server
         private int portNum;
         private EndPoint endPoint;
         private Socket listener;
-        private Socket client;
+        private List<Socket> clients;
         private byte[] data;
         private int bytesReceived;
         public event EventHandler<string> DataReceived;
@@ -30,19 +31,62 @@ namespace Server
         /// <param name="port">The port number on which to listen for incoming connections.</param>
         public Server(IPAddress iPAddress, int portNum)
         {
+            clients = new List<Socket>();
             this.iPAddress = iPAddress;
             this.portNum = portNum;
             listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
+        /// <summary>
+        /// Starts the server, listens for incoming client connections and creates a new thread for each connected client to handle communication.
+        /// </summary>
         public void start()
         {
             endPoint = new IPEndPoint(iPAddress, portNum);
             listener.Bind(endPoint);
             listener.Listen(10);
-            client = listener.Accept();
-            Thread receiveThread = new Thread(ReceiveData);
-            receiveThread.Start();
+
+            Thread listenThread = new Thread(listenForClients);
+            listenThread.Start();
+      
+            
+        }
+
+        /// <summary>
+        /// Listens for incoming client connections and starts a new thread to receive data from each client.
+        /// </summary>
+        /// <remarks>
+        /// This method runs indefinitely until an exception occurs. When a new client connection is accepted,
+        /// the client's socket is added to the `clients` list and a new thread is created to receive data from
+        /// the client using the `ReceiveData` method. If an exception occurs while waiting for clients or
+        /// accepting a client connection, the `OnError` method is called with the exception message and the
+        /// method exits the loop.
+        /// </remarks>
+        private void listenForClients()
+        {
+            while (true)
+            {
+                try
+                {
+                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is listenForClients Thread. Waiting for new Clients");
+
+                    Socket client = listener.Accept();
+                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} listenForClients Thread. Client Accepted");
+
+                    clients.Add(client);
+                    Thread receiveThread = new Thread(() => ReceiveData(client));
+                    receiveThread.Start();
+
+                }
+
+                catch (Exception ex)
+                {
+                    OnError(ex.Message);
+                    break;
+                }
+
+
+            }
         }
 
         /// <summary>
@@ -56,7 +100,7 @@ namespace Server
         /// If an error occurs during the data receive process, such as the client disconnecting or a network error, the Error event
         /// is raised with the exception message as a parameter and the method exits the loop.
         /// </remarks>
-        private void ReceiveData()
+        private void ReceiveData(Socket client)
         {
             while (true)
             {
@@ -64,7 +108,9 @@ namespace Server
                 {
                     // Receive data from client
                     data = new byte[client.Available];
+                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Waiting for new Data");
                     bytesReceived = client.Receive(data);
+                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Got new Data");
                     string message = Encoding.ASCII.GetString(data,0, bytesReceived);
 
                     // Raise DataReceived event with received message
@@ -108,6 +154,7 @@ namespace Server
         /// If an error occurs during the data send process, such as the client disconnecting or a network error, the Error event
         /// is raised with the exception message as a parameter.
         /// </remarks>
+        /*
         public void SendData(string message)
         {
             try
@@ -121,15 +168,15 @@ namespace Server
                 // Raise Error event with exception message
                 Error?.Invoke(this, "Error");
             }
-        }
+        }*/
 
         /// <summary>
         /// Stops the server and disconnects all connected clients.
         /// </summary
         public void Stop()
         {
-            client?.Close();
-            listener?.Close();
+            //client?.Close();
+            //listener?.Close();
         }
     }
     

@@ -13,6 +13,7 @@ namespace Server
         private int bytesReceived;
         private Server server;
 
+
         public ServerForm()
         {
             InitializeComponent();

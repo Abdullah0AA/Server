@@ -63,7 +63,7 @@ namespace Server
                 try
                 {
                     // Receive data from client
-                    data = new byte[1024];
+                    data = new byte[client.Available];
                     bytesReceived = client.Receive(data);
                     string message = Encoding.ASCII.GetString(data,0, bytesReceived);
 
@@ -119,7 +119,7 @@ namespace Server
             catch (Exception ex)
             {
                 // Raise Error event with exception message
-                Error?.Invoke(this, ex.Message);
+                Error?.Invoke(this, "Error");
             }
         }
 

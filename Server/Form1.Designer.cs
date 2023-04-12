@@ -33,6 +33,7 @@
             txtDataFromClient = new TextBox();
             label3 = new Label();
             label1 = new Label();
+            label2 = new Label();
             SuspendLayout();
             // 
             // txtDataToClient
@@ -79,11 +80,23 @@
             label1.TabIndex = 11;
             label1.Text = "Data vom Client";
             // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new Font("Segoe UI", 48F, FontStyle.Regular, GraphicsUnit.Point);
+            label2.ForeColor = Color.OrangeRed;
+            label2.Location = new Point(12, 386);
+            label2.Name = "label2";
+            label2.Size = new Size(212, 86);
+            label2.TabIndex = 12;
+            label2.Text = "Server";
+            // 
             // ServerForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 510);
+            Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(label3);
             Controls.Add(txtDataFromClient);
@@ -103,5 +116,6 @@
         private TextBox txtDataFromClient;
         private Label label3;
         private Label label1;
+        private Label label2;
     }
 }

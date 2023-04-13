@@ -48,8 +48,7 @@ namespace Server
 
             Thread listenThread = new Thread(listenForClients);
             listenThread.Start();
-      
-            
+
         }
 
         /// <summary>
@@ -72,7 +71,7 @@ namespace Server
 
                     Socket client = listener.Accept();
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} listenForClients Thread. Client Accepted");
-
+                    
                     clients.Add(client);
                     Thread receiveThread = new Thread(() => ReceiveData(client));
                     receiveThread.Start();
@@ -113,6 +112,7 @@ namespace Server
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Got new Data");
                     string message = Encoding.ASCII.GetString(data,0, bytesReceived);
 
+                    Respond(client, message);
                     // Raise DataReceived event with received message
                     OnDataReceived(message);
 
@@ -125,6 +125,29 @@ namespace Server
                 }
             }
         }
+
+        /// <summary>
+        /// Responds to a message received from the client by sending a response message back to the client.
+        /// </summary>
+        /// <param name="client">The socket representing the connected client.</param>
+        /// <param name="message">The message received from the client.</param>
+        /// <remarks>
+        /// The method checks the content of the received message and sends a response message back to the client accordingly.
+        /// </remarks>
+        private void Respond(Socket client, string message)
+        {
+            if(message == "1")
+            {
+
+                SendData(client,"Respond to 1");
+            }
+            if(message == "2")
+            {
+                SendData(client, "Respond to 1");
+            }
+        }
+
+
 
         /// <summary>
         /// An event that is raised when an error occurs in the server.
@@ -154,21 +177,21 @@ namespace Server
         /// If an error occurs during the data send process, such as the client disconnecting or a network error, the Error event
         /// is raised with the exception message as a parameter.
         /// </remarks>
-        /*
-        public void SendData(string message)
+
+        public void SendData(Socket client,string responce)
         {
             try
             {
-                // Convert message to byte array and send to client
-                byte[] data = Encoding.ASCII.GetBytes(message);
+                byte[] data = Encoding.ASCII.GetBytes(responce);
                 client.Send(data);
             }
             catch (Exception ex)
             {
-                // Raise Error event with exception message
-                Error?.Invoke(this, "Error");
+                OnError(ex.Message);
             }
-        }*/
+        }
+
+
 
         /// <summary>
         /// Stops the server and disconnects all connected clients.

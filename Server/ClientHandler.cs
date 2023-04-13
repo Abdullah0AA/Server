@@ -7,8 +7,22 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    internal class ClientHandler
+    public class ClientHandler : Socket
     {
+        public ClientHandler(SafeSocketHandle handle) : base(handle)
+        {
+        }
 
+        public ClientHandler(SocketInformation socketInformation) : base(socketInformation)
+        {
+        }
+
+        public ClientHandler(SocketType socketType, ProtocolType protocolType) : base(socketType, protocolType)
+        {
+        }
+
+        public ClientHandler(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) : base(addressFamily, socketType, protocolType)
+        {
+        }
     }
 }

@@ -18,11 +18,12 @@ namespace Server
         private int portNum;
         private EndPoint endPoint;
         private Socket listener;
-        private List<Socket> clients;
+        private Dictionary<Socket, string> clients;
         private byte[] data;
         private int bytesReceived;
         public event EventHandler<string> DataReceived;
         public event EventHandler<string> Error;
+        public string clientID;
 
         /// <summary>
         /// Creates a new instance of the Server class with the specified IP address and port number.
@@ -31,7 +32,7 @@ namespace Server
         /// <param name="port">The port number on which to listen for incoming connections.</param>
         public Server(IPAddress iPAddress, int portNum)
         {
-            clients = new List<Socket>();
+            clients = new Dictionary<Socket, string>();
             this.iPAddress = iPAddress;
             this.portNum = portNum;
             listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -68,11 +69,11 @@ namespace Server
                 try
                 {
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is listenForClients Thread. Waiting for new Clients");
-
+                     
                     Socket client = listener.Accept();
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} listenForClients Thread. Client Accepted");
-                    
-                    clients.Add(client);
+                    clientID = Guid.NewGuid().ToString();
+                    clients.Add(client, clientID);
                     Thread receiveThread = new Thread(() => ReceiveData(client));
                     receiveThread.Start();
 
@@ -105,16 +106,31 @@ namespace Server
             {
                 try
                 {
+                    if (client.Available > 0)
+                    {
                     // Receive data from client
                     data = new byte[client.Available];
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Waiting for new Data");
-                    bytesReceived = client.Receive(data);
-                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Got new Data");
-                    string message = Encoding.ASCII.GetString(data,0, bytesReceived);
 
+                    bytesReceived = client.Receive(data);
+
+                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Got new Data");
+
+                    string message = Encoding.ASCII.GetString(data,0, bytesReceived);
+                    if (message == "disconnect")
+                    {
+                        client.Shutdown(SocketShutdown.Both);
+                        client.Close();
+                        clients.Remove(client);
+                        break;
+                    }
                     Respond(client, message);
+
                     // Raise DataReceived event with received message
                     OnDataReceived(message);
+
+                    }
+
 
                 }
                 catch (Exception ex)
@@ -143,7 +159,7 @@ namespace Server
             }
             if(message == "2")
             {
-                SendData(client, "Respond to 1");
+                SendData(client, "Respond to 2");
             }
         }
 
@@ -184,11 +200,30 @@ namespace Server
             {
                 byte[] data = Encoding.ASCII.GetBytes(responce);
                 client.Send(data);
+                
             }
             catch (Exception ex)
             {
                 OnError(ex.Message);
             }
+        }
+       
+        public void SendData(string responce)
+        {
+            foreach (Socket client in clients.Keys)
+            {
+                try
+                {
+                    byte[] data = Encoding.ASCII.GetBytes(responce);
+                    client.Send(data);
+
+                }
+                catch (Exception ex)
+                {
+                    OnError(ex.Message);
+                }
+            }
+
         }
 
 

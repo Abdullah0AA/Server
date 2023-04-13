@@ -31,7 +31,7 @@ namespace Server
         {
             Invoke((MethodInvoker)delegate
             {
-                txtDataFromClient.Text += "Client: " + message + Environment.NewLine;
+                txtDataFromClient.Text += server.clientID +" >>"+ message + Environment.NewLine;
             });
         }
 
@@ -42,7 +42,7 @@ namespace Server
 
         private void btnSendtoClient_Click(object sender, EventArgs e)
         {
-            //server.SendData(txtDataToClient.Text);
+            server.SendData(txtDataToClient.Text);
         }
     }
 }

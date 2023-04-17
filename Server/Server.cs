@@ -15,15 +15,14 @@ namespace Server
     public class Server
     {
         private IPAddress iPAddress;
-        private int portNum;
         private EndPoint endPoint;
         private Socket listener;
-        private Dictionary<Socket, string> clients;
-        private byte[] data;
-        private int bytesReceived;
+        private int portNum;
+        private List<Client> clientsList;
+        public string clientID;
+
         public event EventHandler<string> DataReceived;
         public event EventHandler<string> Error;
-        public string clientID;
 
         /// <summary>
         /// Creates a new instance of the Server class with the specified IP address and port number.
@@ -32,9 +31,10 @@ namespace Server
         /// <param name="port">The port number on which to listen for incoming connections.</param>
         public Server(IPAddress iPAddress, int portNum)
         {
-            clients = new Dictionary<Socket, string>();
+            
             this.iPAddress = iPAddress;
             this.portNum = portNum;
+            clientsList = new List<Client>();
             listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
@@ -48,6 +48,7 @@ namespace Server
             listener.Listen(10);
 
             Thread listenThread = new Thread(listenForClients);
+            listenThread.Name = "Listen Thread";
             listenThread.Start();
 
         }
@@ -68,13 +69,17 @@ namespace Server
             {
                 try
                 {
-                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is listenForClients Thread. Waiting for new Clients");
+                    Debug.WriteLine($"Thread is : {Thread.CurrentThread.Name} --> Waiting for new Clients");
                      
-                    Socket client = listener.Accept();
-                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} listenForClients Thread. Client Accepted");
-                    clientID = Guid.NewGuid().ToString();
-                    clients.Add(client, clientID);
+                    Socket clientSocket = listener.Accept();
+                    Client client = new Client(clientSocket);
+                    clientID = client.ToString();
+                    clientsList.Add(client);
+                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} --> Client Accepted");
+                    
+
                     Thread receiveThread = new Thread(() => ReceiveData(client));
+                    receiveThread.Name = "Receive Thread";
                     receiveThread.Start();
 
                 }
@@ -100,7 +105,7 @@ namespace Server
         /// If an error occurs during the data receive process, such as the client disconnecting or a network error, the Error event
         /// is raised with the exception message as a parameter and the method exits the loop.
         /// </remarks>
-        private void ReceiveData(Socket client)
+        private void ReceiveData(Client client)
         {
             while (true)
             {
@@ -109,24 +114,23 @@ namespace Server
                     if (client.Available > 0)
                     {
                     // Receive data from client
-                    data = new byte[client.Available];
+                    
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Waiting for new Data");
 
-                    bytesReceived = client.Receive(data);
+                        string message = client.ReceiveString();
 
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Got new Data");
 
-                    string message = Encoding.ASCII.GetString(data,0, bytesReceived);
+                    
                     if (message == "disconnect")
                     {
-                        client.Shutdown(SocketShutdown.Both);
-                        client.Close();
-                        clients.Remove(client);
-                        break;
+                            client.Disconnect();
+                        
                     }
                     Respond(client, message);
 
                     // Raise DataReceived event with received message
+                    clientID = client.ToString();
                     OnDataReceived(message);
 
                     }
@@ -150,7 +154,7 @@ namespace Server
         /// <remarks>
         /// The method checks the content of the received message and sends a response message back to the client accordingly.
         /// </remarks>
-        private void Respond(Socket client, string message)
+        private void Respond(Client client, string message)
         {
             if(message == "1")
             {
@@ -194,7 +198,7 @@ namespace Server
         /// is raised with the exception message as a parameter.
         /// </remarks>
 
-        public void SendData(Socket client,string responce)
+        public void SendData(Client client,string responce)
         {
             try
             {
@@ -210,7 +214,7 @@ namespace Server
        
         public void SendData(string responce)
         {
-            foreach (Socket client in clients.Keys)
+            foreach (Client client in clientsList)
             {
                 try
                 {

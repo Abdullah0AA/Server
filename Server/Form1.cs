@@ -7,10 +7,8 @@ namespace Server
     public partial class ServerForm : Form
     {
 
-        private Socket client;
+        
         private int PORT_NUM = 50000;
-        private byte[] data;
-        private int bytesReceived;
         private Server server;
 
 
@@ -31,7 +29,7 @@ namespace Server
         {
             Invoke((MethodInvoker)delegate
             {
-                txtDataFromClient.Text += server.clientID +" >>"+ message + Environment.NewLine;
+                txtDataFromClient.Text += server.clientID+" >>"+ message + Environment.NewLine;
             });
         }
 

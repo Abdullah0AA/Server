@@ -1,32 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Server
 {
-    public class Client 
+    /// <summary>
+    /// Represents a client connected to the server.
+    /// </summary>
+    public class Client
     {
         private Socket clientSocket;
+        private string id;
         
-        private int available;
-        private int ID;
-        Random random;
 
+        /// <summary>
+        /// Initializes a new instance of the Client class with the specified Socket.
+        /// </summary>
+        /// <param name="clientSocket">The Socket object representing the client connection.</param>
         public Client(Socket clientSocket)
         {
             this.clientSocket = clientSocket;
-            random = new Random();
-            ID = random.Next();
+            id = GenerateClientID();
         }
 
+        /// <summary>
+        /// Generates a unique client ID using a GUID.
+        /// </summary>
+        /// <returns>A string representation of the generated client ID.</returns>
+        private string GenerateClientID()
+        {
+            // Generate a random number
+            string clientID = Guid.NewGuid().ToString()[..8];
+
+            return clientID;
+        }
+
+        public string ID
+        {
+            get { return id; }
+        }
+
+        /// <summary>
+        /// Gets the number of bytes that have been received and are available to be read.
+        /// </summary>
         public int Available
         {
             get { return clientSocket.Available; }
         }
 
+        /// <summary>
+        /// Receives a string message from the client.
+        /// </summary>
+        /// <returns>The received message.</returns>
         public string ReceiveString()
         {
             const int bufferSize = 1024;
@@ -39,23 +63,26 @@ namespace Server
                 bytesReceived = clientSocket.Receive(buffer);
                 receivedData.AddRange(buffer.Take(bytesReceived));
             } while (bytesReceived == buffer.Length);
-            
+
 
             return Encoding.ASCII.GetString(receivedData.ToArray(), 0, bytesReceived);
         }
 
-        public void Send(byte[] data)
+        /// <summary>
+        /// Sends a string message to the client.
+        /// </summary>
+        /// <param name="data">The message to send.</param>
+        public void SendString(string data)
         {
 
-            clientSocket.Send(data);
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            clientSocket.Send(bytes);
         }
 
-        public bool IsConnected
-        {
-            get { return clientSocket.Connected; }
 
-        }
-
+        /// <summary>
+        /// Disconnects the client from the server.
+        /// </summary>
         public void Disconnect()
         {
             if (clientSocket != null && clientSocket.Connected)
@@ -66,11 +93,15 @@ namespace Server
             }
         }
 
-        public override string? ToString()
+        /// <summary>
+        /// Returns a string that represents the current Client object.
+        /// </summary>
+        /// <returns>A string that represents the current Client object.</returns>
+        public override string ToString()
         {
-            
-            return ID.ToString() + "Sender";
+
+            return $"Client({id})";
         }
     }
-   
+
 }

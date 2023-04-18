@@ -20,9 +20,11 @@ namespace Server
         private int portNum;
         private List<Client> clientsList;
         public string clientID;
+        private bool _isClientHandlerSubscribed = false;
 
-        public event EventHandler<string> DataReceived;
+        //public event EventHandler<string> DataReceived;
         public event EventHandler<string> Error;
+        public event EventHandler<string> MessageReceived;
 
         /// <summary>
         /// Creates a new instance of the Server class with the specified IP address and port number.
@@ -31,7 +33,7 @@ namespace Server
         /// <param name="port">The port number on which to listen for incoming connections.</param>
         public Server(IPAddress iPAddress, int portNum)
         {
-            
+
             this.iPAddress = iPAddress;
             this.portNum = portNum;
             clientsList = new List<Client>();
@@ -70,17 +72,23 @@ namespace Server
                 try
                 {
                     Debug.WriteLine($"Thread is : {Thread.CurrentThread.Name} --> Waiting for new Clients");
-                     
+
                     Socket clientSocket = listener.Accept();
                     Client client = new Client(clientSocket);
+                    ClientHandler clientHandler = new ClientHandler(client);
+                    if (!_isClientHandlerSubscribed)
+                    {
+                        clientHandler.DataReceived += OnDataReceived;
+                        _isClientHandlerSubscribed = true;
+                    }
                     clientID = client.ToString();
                     clientsList.Add(client);
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} --> Client Accepted");
-                    
 
-                    Thread receiveThread = new Thread(() => ReceiveData(client));
-                    receiveThread.Name = "Receive Thread";
-                    receiveThread.Start();
+
+                    Thread clientThread = new Thread(clientHandler.HandleClientRequests);
+                    clientThread.Name = "Client Thread";
+                    clientThread.Start();
 
                 }
 
@@ -90,80 +98,6 @@ namespace Server
                     break;
                 }
 
-
-            }
-        }
-
-        /// <summary>
-        /// Receives data from the connected client in a loop and raises the DataReceived event for each received message.
-        /// If an error occurs during the data receive process, the Error event is raised with an exception message.
-        /// </summary>
-        /// <remarks>
-        /// The method continuously waits for incoming data from the connected client using the Receive method of the Socket class.
-        /// When data is received, it is converted from bytes to a string using the ASCII encoding and the DataReceived event is raised
-        /// with the received message as a parameter.
-        /// If an error occurs during the data receive process, such as the client disconnecting or a network error, the Error event
-        /// is raised with the exception message as a parameter and the method exits the loop.
-        /// </remarks>
-        private void ReceiveData(Client client)
-        {
-            while (true)
-            {
-                try
-                {
-                    if (client.Available > 0)
-                    {
-                    // Receive data from client
-                    
-                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Waiting for new Data");
-
-                        string message = client.ReceiveString();
-
-                    Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} is ReceiveData thread. Got new Data");
-
-                    
-                    if (message == "disconnect")
-                    {
-                            client.Disconnect();
-                        
-                    }
-                    Respond(client, message);
-
-                    // Raise DataReceived event with received message
-                    clientID = client.ToString();
-                    OnDataReceived(message);
-
-                    }
-
-
-                }
-                catch (Exception ex)
-                {
-                    // Raise Error event with exception message
-                    OnError(ex.Message);
-                    break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Responds to a message received from the client by sending a response message back to the client.
-        /// </summary>
-        /// <param name="client">The socket representing the connected client.</param>
-        /// <param name="message">The message received from the client.</param>
-        /// <remarks>
-        /// The method checks the content of the received message and sends a response message back to the client accordingly.
-        /// </remarks>
-        private void Respond(Client client, string message)
-        {
-            if(message == "1")
-            {
-
-                SendData(client,"Respond to 1");
-            }
-            if(message == "2")
-            {
-                SendData(client, "Respond to 2");
             }
         }
 
@@ -180,46 +114,24 @@ namespace Server
         /// <summary>
         /// An event that is raised when data is received from the connected client.
         /// </summary>
-        private void OnDataReceived(string message)
+        private void OnDataReceived(object sender, string message)
         {
-            DataReceived?.Invoke(this, message);
+            MessageReceived?.Invoke(this, message);
 
         }
 
         /// <summary>
-        /// Sends a string message to the connected client using the Send method of the Socket class.
-        /// If an error occurs during the data send process, the Error event is raised with an exception message.
+        /// Sends data to all connected clients.
         /// </summary>
-        /// <param name="message">The string message to send to the connected client.</param>
-        /// <remarks>
-        /// The method converts the string message to a byte array using the ASCII encoding and sends it to the connected client
-        /// using the Send method of the Socket class.
-        /// If an error occurs during the data send process, such as the client disconnecting or a network error, the Error event
-        /// is raised with the exception message as a parameter.
-        /// </remarks>
-
-        public void SendData(Client client,string responce)
-        {
-            try
-            {
-                byte[] data = Encoding.ASCII.GetBytes(responce);
-                client.Send(data);
-                
-            }
-            catch (Exception ex)
-            {
-                OnError(ex.Message);
-            }
-        }
-       
-        public void SendData(string responce)
+        /// <param name="data">The data to send.</param>
+        public void SendDataToAllClients(string data)
         {
             foreach (Client client in clientsList)
             {
                 try
                 {
-                    byte[] data = Encoding.ASCII.GetBytes(responce);
-                    client.Send(data);
+
+                    client.SendString(data);
 
                 }
                 catch (Exception ex)
@@ -230,8 +142,6 @@ namespace Server
 
         }
 
-
-
         /// <summary>
         /// Stops the server and disconnects all connected clients.
         /// </summary
@@ -241,5 +151,5 @@ namespace Server
             //listener?.Close();
         }
     }
-    
+
 }

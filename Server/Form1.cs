@@ -16,7 +16,7 @@ namespace Server
         {
             InitializeComponent();
             server = new Server(IPAddress.Any, PORT_NUM);
-            server.DataReceived += onDataReceived;
+            server.MessageReceived += onDataReceived;
             server.Error += OnError;
         }
 
@@ -40,7 +40,7 @@ namespace Server
 
         private void btnSendtoClient_Click(object sender, EventArgs e)
         {
-            server.SendData(txtDataToClient.Text);
+            server.SendDataToAllClients(txtDataToClient.Text);
         }
     }
 }

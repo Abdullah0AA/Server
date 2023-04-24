@@ -1,16 +1,12 @@
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 
 namespace Server
 {
     public partial class ServerForm : Form
     {
 
-        
         private int PORT_NUM = 50000;
         private Server server;
-
 
         public ServerForm()
         {
@@ -29,7 +25,7 @@ namespace Server
         {
             Invoke((MethodInvoker)delegate
             {
-                txtDataFromClient.Text += server.clientID+" >>"+ message + Environment.NewLine;
+                txtDataFromClient.Text += server.clientID + " >>" + message + Environment.NewLine;
             });
         }
 
@@ -41,6 +37,11 @@ namespace Server
         private void btnSendtoClient_Click(object sender, EventArgs e)
         {
             server.SendDataToAllClients(txtDataToClient.Text);
+        }
+
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+            txtDataFromClient.Clear();
         }
     }
 }

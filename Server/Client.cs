@@ -8,17 +8,17 @@ namespace Server
     /// </summary>
     public class Client
     {
-        private Socket clientSocket;
+        private TcpClient tcpClient;
         private string id;
-        
+
 
         /// <summary>
         /// Initializes a new instance of the Client class with the specified Socket.
         /// </summary>
         /// <param name="clientSocket">The Socket object representing the client connection.</param>
-        public Client(Socket clientSocket)
+        public Client(TcpClient tcpClient)
         {
-            this.clientSocket = clientSocket;
+            this.tcpClient = tcpClient;
             id = GenerateClientID();
         }
 
@@ -44,7 +44,7 @@ namespace Server
         /// </summary>
         public int Available
         {
-            get { return clientSocket.Available; }
+            get { return tcpClient.Available; }
         }
 
         /// <summary>
@@ -60,12 +60,12 @@ namespace Server
             int bytesReceived;
             do
             {
-                bytesReceived = clientSocket.Receive(buffer);
+                bytesReceived = tcpClient.GetStream().Read(buffer, 0, buffer.Length);
                 receivedData.AddRange(buffer.Take(bytesReceived));
             } while (bytesReceived == buffer.Length);
 
 
-            return Encoding.ASCII.GetString(receivedData.ToArray(), 0, bytesReceived);
+            return Encoding.ASCII.GetString(receivedData.ToArray(), 0, receivedData.Count);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Server
         {
 
             byte[] bytes = Encoding.UTF8.GetBytes(data);
-            clientSocket.Send(bytes);
+            tcpClient.GetStream().Write(bytes, 0, bytes.Length);
         }
 
 
@@ -85,11 +85,10 @@ namespace Server
         /// </summary>
         public void Disconnect()
         {
-            if (clientSocket != null && clientSocket.Connected)
+            if (tcpClient != null && tcpClient.Connected)
             {
-                clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
-                clientSocket.Dispose();
+                tcpClient.GetStream().Close();
+                tcpClient.Close();
             }
         }
 

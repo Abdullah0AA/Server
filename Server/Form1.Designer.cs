@@ -34,21 +34,22 @@
             label3 = new Label();
             label1 = new Label();
             label2 = new Label();
+            btnReset = new Button();
             SuspendLayout();
             // 
             // txtDataToClient
             // 
-            txtDataToClient.Location = new Point(370, 122);
+            txtDataToClient.Location = new Point(1069, 73);
             txtDataToClient.Multiline = true;
             txtDataToClient.Name = "txtDataToClient";
-            txtDataToClient.Size = new Size(300, 154);
+            txtDataToClient.Size = new Size(300, 136);
             txtDataToClient.TabIndex = 6;
             // 
             // btnSendtoClient
             // 
-            btnSendtoClient.Location = new Point(370, 282);
+            btnSendtoClient.Location = new Point(1069, 214);
             btnSendtoClient.Name = "btnSendtoClient";
-            btnSendtoClient.Size = new Size(82, 26);
+            btnSendtoClient.Size = new Size(82, 23);
             btnSendtoClient.TabIndex = 8;
             btnSendtoClient.Text = "Send";
             btnSendtoClient.UseVisualStyleBackColor = true;
@@ -56,27 +57,27 @@
             // 
             // txtDataFromClient
             // 
-            txtDataFromClient.Location = new Point(12, 122);
+            txtDataFromClient.Location = new Point(12, 108);
             txtDataFromClient.Multiline = true;
             txtDataFromClient.Name = "txtDataFromClient";
-            txtDataFromClient.Size = new Size(300, 154);
+            txtDataFromClient.Size = new Size(1051, 566);
             txtDataFromClient.TabIndex = 9;
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(370, 102);
+            label3.Location = new Point(1069, 55);
             label3.Name = "label3";
-            label3.Size = new Size(99, 17);
+            label3.Size = new Size(91, 15);
             label3.TabIndex = 10;
             label3.Text = "Data zum Client";
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(12, 102);
+            label1.Location = new Point(12, 90);
             label1.Name = "label1";
-            label1.Size = new Size(100, 17);
+            label1.Size = new Size(92, 15);
             label1.TabIndex = 11;
             label1.Text = "Data vom Client";
             // 
@@ -85,17 +86,28 @@
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 48F, FontStyle.Regular, GraphicsUnit.Point);
             label2.ForeColor = Color.OrangeRed;
-            label2.Location = new Point(12, 386);
+            label2.Location = new Point(12, 677);
             label2.Name = "label2";
             label2.Size = new Size(212, 86);
             label2.TabIndex = 12;
             label2.Text = "Server";
             // 
+            // btnReset
+            // 
+            btnReset.Location = new Point(988, 680);
+            btnReset.Name = "btnReset";
+            btnReset.Size = new Size(75, 23);
+            btnReset.TabIndex = 13;
+            btnReset.Text = "Reset";
+            btnReset.UseVisualStyleBackColor = true;
+            btnReset.Click += btnReset_Click;
+            // 
             // ServerForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 17F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 510);
+            ClientSize = new Size(1415, 784);
+            Controls.Add(btnReset);
             Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(label3);
@@ -117,5 +129,6 @@
         private Label label3;
         private Label label1;
         private Label label2;
+        private Button btnReset;
     }
 }

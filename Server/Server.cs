@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server
 {
@@ -15,16 +10,15 @@ namespace Server
     public class Server
     {
         private IPAddress iPAddress;
-        private EndPoint endPoint;
-        private Socket listener;
+        //private Socket listener;
         private int portNum;
         private List<Client> clientsList;
         public string clientID;
-        private bool _isClientHandlerSubscribed = false;
 
         //public event EventHandler<string> DataReceived;
         public event EventHandler<string> Error;
         public event EventHandler<string> MessageReceived;
+        private TcpListener tcpListener;
 
         /// <summary>
         /// Creates a new instance of the Server class with the specified IP address and port number.
@@ -36,8 +30,10 @@ namespace Server
 
             this.iPAddress = iPAddress;
             this.portNum = portNum;
+            //clientListener = new ClientListener(iPAddress, portNum, listener, OnClientConnected);
             clientsList = new List<Client>();
-            listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            tcpListener = new(iPAddress, portNum);
+            //listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
         /// <summary>
@@ -45,13 +41,15 @@ namespace Server
         /// </summary>
         public void start()
         {
-            endPoint = new IPEndPoint(iPAddress, portNum);
-            listener.Bind(endPoint);
-            listener.Listen(10);
+            //endPoint = new IPEndPoint(iPAddress, portNum);
+            //listener.Bind(endPoint);
+            //listener.Listen(10);
+            tcpListener.Start();
 
-            Thread listenThread = new Thread(listenForClients);
-            listenThread.Name = "Listen Thread";
-            listenThread.Start();
+            //Thread listenThread = new Thread(listenForClients);
+            //listenThread.Name = "Listen Thread";
+            //listenThread.Start();
+            Task listenTask = Task.Run(() => listenForClients());
 
         }
 
@@ -73,22 +71,25 @@ namespace Server
                 {
                     Debug.WriteLine($"Thread is : {Thread.CurrentThread.Name} --> Waiting for new Clients");
 
-                    Socket clientSocket = listener.Accept();
-                    Client client = new Client(clientSocket);
+                    //Socket clientSocket = listener.Accept();
+                    TcpClient tcpClient = tcpListener.AcceptTcpClient();
+                    Client client = new Client(tcpClient);
                     ClientHandler clientHandler = new ClientHandler(client);
-                    if (!_isClientHandlerSubscribed)
-                    {
-                        clientHandler.DataReceived += OnDataReceived;
-                        _isClientHandlerSubscribed = true;
-                    }
+
+
+                    clientHandler.DataReceived += OnDataReceived;
+
                     clientID = client.ToString();
                     clientsList.Add(client);
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} --> Client Accepted");
 
 
-                    Thread clientThread = new Thread(clientHandler.HandleClientRequests);
-                    clientThread.Name = "Client Thread";
-                    clientThread.Start();
+                    //Thread clientThread = new Thread(clientHandler.HandleClientRequests);
+                    //clientThread.Name = "Client Thread";
+                    //clientThread.Start();
+                    Task handleClient = Task.Run(() => clientHandler.HandleClientRequests());
+
+
 
                 }
 
@@ -147,8 +148,7 @@ namespace Server
         /// </summary
         public void Stop()
         {
-            //client?.Close();
-            //listener?.Close();
+            tcpListener.Stop();
         }
     }
 

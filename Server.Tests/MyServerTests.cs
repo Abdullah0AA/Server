@@ -68,9 +68,8 @@ namespace Server.Tests
         {
             // Arrange
             MyServer server = new MyServer(IPAddress.Any, 1234);
-            string receivedMessage = string.Empty;
             string errorMessage = "Test error message";
-            string receivedErrorMessage = null;
+            string receivedErrorMessage = "Nothing yet";
 
             // Act
             server.Error += (sender, message) => receivedErrorMessage = message;

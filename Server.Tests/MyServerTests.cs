@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿using Moq;
+using System.Drawing;
+using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 
@@ -22,6 +25,8 @@ namespace Server.Tests
 
 
         }
+
+
         [Fact]
         public void Stop_StopsServer()
         {
@@ -37,6 +42,8 @@ namespace Server.Tests
             // Assert
             Assert.False(server.tcpListener.Server.IsBound);
         }
+
+
         [Fact]
         public void ServerRaisesMessageReceivedEventWhenDataIsReceived()
         {
@@ -61,10 +68,12 @@ namespace Server.Tests
 
             // Assert
             Assert.Equal(testMessage, receivedMessage);
+            server.Stop();
         }
 
+
         [Fact]
-        public void Server_Raises_Error_Event_When_Error_Occurs()
+        public void ServerRaisesErrorEventWhenErrorOccurs()
         {
             // Arrange
             MyServer server = new MyServer(IPAddress.Any, 1234);
@@ -78,7 +87,11 @@ namespace Server.Tests
             server.OnError(errorMessage);
 
             // Assert
-            Assert.Equal(errorMessage, receivedErrorMessage); 
+            Assert.Equal(errorMessage, receivedErrorMessage);
+           
         }
+
+
+
     }
 }

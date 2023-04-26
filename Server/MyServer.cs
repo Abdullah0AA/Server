@@ -83,7 +83,7 @@ namespace Server
                     //Thread clientThread = new Thread(clientHandler.HandleClientRequests);
                     //clientThread.Name = "Client Thread";
                     //clientThread.Start();
-                    Task handleClient = Task.Run(() => clientHandler.HandleClientRequests());
+                    Task handleClient = Task.Run(() => clientHandler.HandleClients());
 
 
 

@@ -6,12 +6,12 @@ namespace Server
     {
 
         private int PORT_NUM = 50000;
-        private Server server;
+        private MyServer server;
 
         public ServerForm()
         {
             InitializeComponent();
-            server = new Server(IPAddress.Any, PORT_NUM);
+            server = new MyServer(IPAddress.Any, PORT_NUM);
             server.MessageReceived += onDataReceived;
             server.Error += OnError;
         }

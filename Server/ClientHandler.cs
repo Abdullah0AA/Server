@@ -20,7 +20,7 @@ namespace Server
         /// <param name="client">The client object that this handler is associated with.</param>
         public ClientHandler(Client client)
         {
-            this._client = client;
+            _client = client;
         }
 
         /// <summary>

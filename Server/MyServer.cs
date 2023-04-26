@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.VisualBasic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 
@@ -7,33 +8,33 @@ namespace Server
     /// <summary>
     /// A class representing a TCP server that can accept connections from clients and send/receive data.
     /// </summary>
-    public class Server
+    public class MyServer
     {
         private IPAddress iPAddress;
-        //private Socket listener;
         private int portNum;
         private List<Client> clientsList;
+
         public string clientID;
 
         //public event EventHandler<string> DataReceived;
         public event EventHandler<string> Error;
         public event EventHandler<string> MessageReceived;
-        private TcpListener tcpListener;
+        public TcpListener tcpListener;
 
         /// <summary>
         /// Creates a new instance of the Server class with the specified IP address and port number.
         /// </summary>
         /// <param name="ipAddress">The IP address on which to listen for incoming connections.</param>
         /// <param name="port">The port number on which to listen for incoming connections.</param>
-        public Server(IPAddress iPAddress, int portNum)
+        public MyServer(IPAddress iPAddress, int portNum)
         {
 
             this.iPAddress = iPAddress;
             this.portNum = portNum;
-            //clientListener = new ClientListener(iPAddress, portNum, listener, OnClientConnected);
+
             clientsList = new List<Client>();
             tcpListener = new(iPAddress, portNum);
-            //listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
         }
 
         /// <summary>
@@ -41,14 +42,9 @@ namespace Server
         /// </summary>
         public void start()
         {
-            //endPoint = new IPEndPoint(iPAddress, portNum);
-            //listener.Bind(endPoint);
-            //listener.Listen(10);
+
             tcpListener.Start();
 
-            //Thread listenThread = new Thread(listenForClients);
-            //listenThread.Name = "Listen Thread";
-            //listenThread.Start();
             Task listenTask = Task.Run(() => listenForClients());
 
         }
@@ -80,7 +76,7 @@ namespace Server
                     clientHandler.DataReceived += OnDataReceived;
 
                     clientID = client.ToString();
-                    clientsList.Add(client);
+                    AddClientToList(client);
                     Debug.WriteLine($"Thread is :  {Thread.CurrentThread.ManagedThreadId} --> Client Accepted");
 
 
@@ -107,7 +103,7 @@ namespace Server
         /// <summary>
         /// An event that is raised when an error occurs in the server.
         /// </summary>
-        private void OnError(string message)
+        public void OnError(string message)
         {
             Error?.Invoke(this, message);
         }
@@ -149,6 +145,16 @@ namespace Server
         public void Stop()
         {
             tcpListener.Stop();
+        }
+
+        public void AddClientToList(Client client)
+        {
+
+            this.clientsList.Add(client);
+        }
+        public IReadOnlyList<Client> GetClientsList()
+        {
+            return clientsList;
         }
     }
 

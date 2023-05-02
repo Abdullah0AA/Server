@@ -23,7 +23,6 @@ namespace Server.Tests
             // Assert
             Assert.True(server.tcpListener.Server.IsBound);
 
-
         }
 
 

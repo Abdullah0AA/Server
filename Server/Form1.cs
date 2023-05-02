@@ -1,4 +1,5 @@
 using System.Net;
+using System.Windows.Forms;
 
 namespace Server
 {
@@ -14,6 +15,7 @@ namespace Server
             server = new MyServer(IPAddress.Any, PORT_NUM);
             server.MessageReceived += onDataReceived;
             server.Error += OnError;
+
         }
 
         private void OnError(object? sender, string message)
@@ -32,6 +34,11 @@ namespace Server
         private void ServerForm_Load(object sender, EventArgs e)
         {
             server.start();
+            notifyIcon1.BalloonTipTitle = "Produktion Server";
+            notifyIcon1.BalloonTipText = "Nofifcation";
+            notifyIcon1.Text = "Produktion Server";
+            notifyIcon1.Visible = true;
+
         }
 
         private void btnSendtoClient_Click(object sender, EventArgs e)
@@ -42,6 +49,46 @@ namespace Server
         private void btnReset_Click(object sender, EventArgs e)
         {
             txtDataFromClient.Clear();
+        }
+
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.Show();
+            this.ShowInTaskbar = true;
+            notifyIcon1.Visible = false;
+            WindowState = FormWindowState.Normal;
+
+        }
+
+        private void ServerForm_Resize(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Minimized)
+            {
+                this.Hide();
+                notifyIcon1.Visible = true;
+
+            }
+            else if (FormWindowState.Normal == this.WindowState)
+            {
+                notifyIcon1.Visible = false;
+
+            }
+        }
+
+        private void ServerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                this.Hide();
+                notifyIcon1.Visible = true;
+            }
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
